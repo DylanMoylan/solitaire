@@ -15,19 +15,14 @@
             Hand
           </div>
           <div class="empty-pane" style="position:relative">
-            <div
+            <card
+              :card="card"
+              :index="key"
+              location="drawn" 
               v-for="(card,key) in drawn"
               :key="`drwc${key}`"
-              :style="{
-                'color': card.color,
-                'display': card.shown ? 'initial' : 'none',
-                'position': 'absolute',
-                'z-index': key + 1,
-                'left': `${key * 25}px`
-              }"
-            >
-              <div v-html="card.icon" class="sltr-card non-selectable"/>
-            </div>
+              @moveCard="moveCard"
+            />
           </div>
         </div>
         <div class="row q-mt-md">
@@ -41,16 +36,15 @@
     <div 
       v-for="(pane, index) in tableau"
       :key="`tn${index}`"
+      class="empty-pane" 
+      style="position:relative"
     >
-      <div
+      <card
+        :card="card"
+        :index="key"
+        location="drawn" 
         v-for="(card,key) in pane"
         :key="`tn${index}-${key}`"
-        v-html="card.icon"
-        class="sltr-card non-selectable"
-        :style="{
-          'color': card.color,
-          'display': card.shown ? 'initial' : 'none'
-        }"
       />
     </div>
   </q-page>
@@ -58,8 +52,10 @@
 
 <script>
 import init from 'src/init'
+import Card from 'src/components/Card.vue'
 
 export default {
+  components: { Card },
   name: 'PageIndex',
   mixins: [init],
   data() {
@@ -101,7 +97,50 @@ export default {
         })]
         this.drawn = []
       }
+    },
+    moveCard(card) {
+      let validLocation = this.tableauRequirements.find(slot => slot.color == card.color && slot.number == card.number)
+      if(validLocation) {
+        this[validLocation.location][validLocation.index].push(this.drawn.pop())
+      }
     }
+  },
+  computed: {
+    tableauRequirements() {
+      return this.tableau.map((slot, index) => {
+        if(slot.length) {
+          let topCard = slot[slot.length - 1]
+          return {
+            color: topCard.color == 'black' ? 'red' : 'black',
+            number: topCard.number - 1,
+            location: 'tableau',
+            index
+          }
+        }else {
+          return {
+            color: 'any',
+            number: 13,
+            location: 'tableau',
+            index
+          }
+        }
+      }).concat(this.foundation.map((slot, index) => {
+        if(slot.cards.length) {
+          return {
+            suite: slot.suite,
+            number: slot.cards.length,
+            location: 'foundation',
+            index
+          }
+        }else{
+          return {
+            number: 1,
+            location: 'foundation',
+            index
+          }
+        }
+      }))
+    },
   },
   mounted() {
     this.createDeck()
@@ -110,7 +149,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
  .empty-pane {
    width: 9em;
    height: 14em;

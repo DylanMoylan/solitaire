@@ -29,7 +29,8 @@ export default {
                     13: 'King'
                 }
                 return {
-                    number: faces[number] ? faces[number] : number,
+                    number,
+                    face: faces[number] ? faces[number] : null,
                     suite,
                     color: suites[suite].color,
                     icon: number < 11 ? `&#${parseInt(suites[suite].icon) + parseInt(number)};` : `&#${parseInt(suites[suite].icon) + parseInt(number) + 1};`,
