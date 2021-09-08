@@ -1,0 +1,17 @@
+Setup:
+    - 4 empty 'foundation' panes
+        - 1 pane for each suite (Hearts, diamonds, spades, clubs)
+    - 7 'tablaeu' panes containing piles of cards of ascending size from 1-7, with the topmost card revealed.
+        - successfully removing the topmost card reveals the next card in the stack, face down. facedown cards can be clicked to reveal.
+        - 
+    - 1 pane for the deck, starting with 24 cards face down (52 - 24 cards in source)
+        - standard 52 card deck, no jokers
+        - deck starts shuffled
+        - cards can be drawn from the deck 3 at a time, moving them to the draw pile.
+        - If less than 3 cards remain, draw the remainder.
+        - If none remain, move the draw pile back to the deck pile.
+    - 1 pane for drawn cards, starting empty.
+        - cards can be moved from the draw pile onto foundation tiles of the same suite if the topmost card is 1 less than the drawn card.
+        - cards can be moved from the draw pile onto tablaeu tiles of an alternate color if the topmost card is 1 more than the drawn card.
+Win Condition:
+    - The player fills all 4 foundation panes with a full run of a suite, from Ace to King
