@@ -33,7 +33,7 @@ export default {
                     face: faces[number] ? faces[number] : null,
                     suite,
                     color: suites[suite].color,
-                    icon: number < 11 ? `&#${parseInt(suites[suite].icon) + parseInt(number)};` : `&#${parseInt(suites[suite].icon) + parseInt(number) + 1};`,
+                    icon: number < 12 ? `&#${parseInt(suites[suite].icon) + parseInt(number)};` : `&#${parseInt(suites[suite].icon) + parseInt(number) + 1};`,
                     shown: false
                 }
             }

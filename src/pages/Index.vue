@@ -3,17 +3,10 @@
     <div class="row full-width justify-between">
         <div class="row q-mt-md">
           <div
-            v-for="(card,key) in deck"
-            :key="`dc${key}`"
-            v-html="card.icon"
-            :style="{
-              'color': card.color,
-              'display': card.shown ? 'initial' : 'none'
-            }"
-          />
-          <div class="empty-pane q-ml-md" @click="draw">
-            Hand
-          </div>
+            class="q-ml-md q-mr-md  non-selectable"
+            :class="deck.length ? 'sltr-card' : 'empty-pane'"
+            v-html="deck.length ? '&#127136;' : ''"
+            @click="draw" />
           <div class="empty-pane" style="position:relative">
             <card
               :card="card"
@@ -21,7 +14,7 @@
               location="drawn" 
               v-for="(card,key) in drawn"
               :key="`drwc${key}`"
-              @moveCard="moveCard"
+              @moveCard="val => moveCard(val, 'drawn')"
             />
           </div>
         </div>
@@ -29,7 +22,14 @@
           <div 
             v-for="(pane, index) in foundation"
             :key="`fp${index}`"
-            class="empty-pane">
+            class="empty-pane" style="position:relative">
+              <card
+                :card="card"
+                :index="key"
+                location="foundation" 
+                v-for="(card,key) in pane"
+                :key="`fn${index}-${key}`"
+              />
           </div>
         </div>
     </div>
@@ -42,9 +42,10 @@
       <card
         :card="card"
         :index="key"
-        location="drawn" 
+        location="tableau" 
         v-for="(card,key) in pane"
         :key="`tn${index}-${key}`"
+        @moveCard="val => moveCard(val, 'tableau', index, key)"
       />
     </div>
   </q-page>
@@ -61,22 +62,10 @@ export default {
   data() {
     return {
       foundation: [
-        {
-          suite: null,
-          cards: []
-        },
-        {
-          suite: null,
-          cards: []
-        },
-        {
-          suite: null,
-          cards: []
-        },
-        {
-          suite: null,
-          cards: []
-        }
+        [],
+        [],
+        [],
+        []
       ],
       deck: [],
       tableau: [],
@@ -98,10 +87,32 @@ export default {
         this.drawn = []
       }
     },
-    moveCard(card) {
-      let validLocation = this.tableauRequirements.find(slot => slot.color == card.color && slot.number == card.number)
-      if(validLocation) {
-        this[validLocation.location][validLocation.index].push(this.drawn.pop())
+    moveCard(card, location, index, cardIndex) {
+      console.log('card: ', card);
+      console.log('location: ', location);
+      console.log('index: ', index);
+      console.log('cardIndex: ', cardIndex);
+      let source
+      let validTableu = this.tableauRequirements.find(slot => (slot.color == card.color || slot.color == 'any') && slot.number == card.number)
+      let validFoundation = this.foundationRequirements.find(slot => {
+        return (slot.suite == 'any' || slot.suite == card.suite) && card.number == slot.number
+      })
+      if(validFoundation || validTableu){
+        if(location == 'drawn'){
+          source = [this.drawn.pop()]
+        }else{
+          source = this[location][index].splice(cardIndex, (this[location][index].length - cardIndex + 1))
+        }
+        if(location == 'tableau' && this[location][index].length){
+          this[location][index][this[location][index].length - 1].shown = true
+        }
+      }
+      if(validFoundation) {
+        source.forEach(c => this[validFoundation.location][validFoundation.index].push(c))
+      }else {
+        if(validTableu) {
+          source.forEach(c => this[validTableu.location][validTableu.index].push(c))
+        }
       }
     }
   },
@@ -124,23 +135,27 @@ export default {
             index
           }
         }
-      }).concat(this.foundation.map((slot, index) => {
-        if(slot.cards.length) {
+      })
+    },
+    foundationRequirements() {
+      return this.foundation.map((slot, index) => {
+        if(slot.length) {
           return {
-            suite: slot.suite,
-            number: slot.cards.length,
+            suite: slot[0].suite,
+            number: slot.length + 1,
             location: 'foundation',
             index
           }
         }else{
           return {
+            suite: 'any',
             number: 1,
             location: 'foundation',
             index
           }
         }
-      }))
-    },
+      })
+    }
   },
   mounted() {
     this.createDeck()
@@ -159,6 +174,7 @@ export default {
    cursor: pointer;
  }
  .sltr-card {
+   line-height: .93;
    cursor: pointer;
    font-size: 15em;
    background-color: white;
