@@ -11,11 +11,19 @@
             <card
               :card="card"
               :index="key"
+              :cardPosition="key"
               location="drawn" 
               :pile="drawn"
               v-for="(card,key) in drawn"
               :key="`drwc${key}`"
               @moveCard="val => moveCard(val, 'drawn', null, key)"
+              @moveCardTo="moveCardTo"
+              @holdCard="holdCard"
+              @acceptCard="acceptCard"
+              @cardHovered="cardHovered"
+              :cardHeld="cardHeld"
+              :left="left"
+              :top="top"
             />
           </div>
         </div>
@@ -43,11 +51,20 @@
       >
         <card
           :card="card"
+          :pile="pane"
           :index="key"
+          :cardPosition="index"
           location="tableau" 
           v-for="(card,key) in pane"
           :key="`tn${index}-${key}`"
           @moveCard="val => moveCard(val, 'tableau', index, key)"
+          @moveCardTo="moveCardTo"
+          @holdCard="holdCard"
+          @acceptCard="acceptCard"
+          @cardHovered="cardHovered"
+          :cardHeld="cardHeld"
+          :left="left"
+          :top="top"
         />
       </div>
     </div>
@@ -76,10 +93,20 @@ export default {
       ],
       deck: [],
       tableau: [],
-      drawn: []
+      drawn: [],
+      cardHeld: null,
+      cardHovering: null,
+      left: 0,
+      top: 0
     }
   },
   methods: {
+    acceptCard(data) {
+      console.log('data: ', data);
+    },
+    cardHovered(data) {
+      this.cardHovering = data
+    },
     draw() {
       if(this.deck.length){
         this.drawn.push(...this.deck.splice(0,3))
@@ -93,6 +120,28 @@ export default {
         })]
         this.drawn = []
       }
+    },
+    holdCard(card) {
+      this.cardHeld = card
+    },
+    moveCardTo(incoming) {
+      console.log('firing movecard to')
+      let transfer = []
+      let source = this[this.cardHeld.location][this.cardHeld.cardPosition]
+      let destination = this[this.cardHovering.location][this.cardHovering.cardPosition]
+      let destinationCard = destination[destination.length - 1]
+      console.log('destinationCard', destinationCard)
+      console.log('this.cardHeld',this.cardHeld)
+      if(destinationCard.color != this.cardHeld.card.color && (destinationCard.number == (this.cardHeld.card.number + 1))) {
+        console.log('movign the card')
+        transfer = source.splice(this.cardHeld.index, source.length)
+        transfer.forEach(card => destination.push(card))
+        if(source.length) {
+          source[source.length - 1].shown = true
+          this.$emit('update:score', this.score + 5)
+        }
+      }
+      this.cardHeld = null
     },
     moveCard(card, location, index, cardIndex) {
       let source, validFoundation, sourcePile
@@ -115,16 +164,14 @@ export default {
         }
         if(location == 'tableau' && this[location][index].length){
           this[location][index][this[location][index].length - 1].shown = true
-          console.log('updating score: turnover')
           this.$emit('update:score', this.score + 5)
         }
       }
       if(validTableu && validFoundation) {
-        if(card.number == 1 || card.number == 2) {
+        if((card.number == 1 || card.number == 2) || card.number == 13 && location == 'tableau') {
           source.forEach(c => this[validFoundation.location][validFoundation.index].push(c))
           setTimeout(()=> {
             this.$emit('update:score', this.score + 10)
-            console.log('updating score: to foundation')
           }, 500)
         }else{
           if(location == 'drawn'){
@@ -140,10 +187,13 @@ export default {
           source.forEach(c => this[validTableu.location][validTableu.index].push(c))
         }else if(validFoundation) {
           source.forEach(c => this[validFoundation.location][validFoundation.index].push(c))
-          console.log('updating score: to foundation')
           this.$emit('update:score', this.score + 10)
         }
       }
+    },
+    watchPosition(e) {
+      this.left = e.clientX
+      this.top = e.clientY
     }
   },
   computed: {
@@ -206,6 +256,10 @@ export default {
     this.createDeck()
     this.createTableau()
     this.$emit('update:score', 0)
+    window.addEventListener('mousemove', this.watchPosition)
+  },
+  beforeDestroy() {
+    window.removeEventListener('mousemove', this.watchPosition)
   }
 }
 </script>
