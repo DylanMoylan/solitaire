@@ -2,12 +2,12 @@
     <div
         :style="{
             'color': card.color,
-            'position': 'absolute',
-            'z-index': index + 1,
-            'left': location == 'drawn' ? `${index * 25}px` : 0,
-            'top': location == 'tableau' ? (card.shown ? `${index * 25}px` : `${index * 10}px`) : 0
+            'position': detached ? 'fixed' : 'absolute',
+            'z-index': detached ? '100' : index + 1,
+            'left': detached ? `${left}px` : (location == 'drawn' ? `${index * 25}px` : 0),
+            'top': detached ? `${top}px` : (location == 'tableau' ? (card.shown ? `${index * 25}px` : `${index * 10}px`) : 0)
         }"
-        @click="moveCard"
+        @dblclick="moveCard"
     >
         <div v-html="card.shown ? card.icon : '&#127136;'" class="sltr-card non-selectable"/>
     </div>
@@ -15,10 +15,42 @@
 
 <script>
 export default {
-    props: ['card', 'index', 'location'],
+    props: ['card', 'index', 'location', 'pile'],
+    data() {
+        return {
+            detached: false,
+            left: null,
+            top: null
+        }
+    },
     methods: {
         moveCard() {
-            this.$emit('moveCard', this.card)
+            if(this.location != 'drawn'){
+                this.$emit('moveCard', this.card)
+            }
+            else {
+                if(this.pile && this.index + 1 == this.pile.length){
+                    this.$emit('moveCard', this.card)
+                }
+            }
+        },
+        detach() {
+            this.detached = true
+            window.addEventListener('mousemove', this.moveThis)
+            window.addEventListener('mouseup', this.removeListener)
+        },
+        attach() {
+            window.removeEventListener('mousemove', this.moveThis)
+        },
+        moveThis(e) {
+            console.log('e: ', e);
+            this.left = e.clientX
+            this.top = e.clientY
+        },
+        removeListener() {
+            this.detached = false
+            window.removeEventListener('mousemove', this.moveThis)
+            window.removeEventListener('mousemove', this.removeListener)
         }
     }
 }
