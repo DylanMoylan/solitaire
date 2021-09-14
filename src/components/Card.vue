@@ -7,9 +7,10 @@
             'left': cLeft,
             'top': cTop
         }"
-        @mousedown="detach"
+        @mousedown.stop="detach"
         @mouseup="attach"
-        @mouseenter="hoverCard"
+        @mouseenter="hoverCard(false)"
+        @mouseleave="hoverCard(true)"
     >
         <div v-html="card.shown ? card.icon : '&#127136;'" class="sltr-card non-selectable"/>
     </div>
@@ -26,14 +27,18 @@ export default {
         }
     },
     methods: {
-        hoverCard() {
+        hoverCard(reset) {
             if(!this.detached) {
-                this.$emit('cardHovered', {
-                    card: this.card,
-                    index: this.index,
-                    location: this.location,
-                    cardPosition: this.cardPosition
-                })
+                if(reset) {
+                    this.$emit('cardHovered', null)
+                }else{
+                    this.$emit('cardHovered', {
+                        card: this.card,
+                        index: this.index,
+                        location: this.location,
+                        cardPosition: this.cardPosition
+                    })
+                }
             }
         },
         moveCard(moveCardTo) {
@@ -103,9 +108,9 @@ export default {
         },
         cLeft() {
             if(this.detached) {
-                return `${this.left}px`
+                return `${this.left + 10}px`
             }else if(this.isTiedToCardHeld){
-                return `${this.left}px`
+                return `${this.left + 10}px`
             }else if(this.location == 'drawn') {
                 return `${this.index * 25}px`
             }else{
@@ -114,9 +119,10 @@ export default {
         },
         cTop() {
             if(this.detached) {
-                return `${this.top}px`
+                return `${this.top + 10}px`
             }else if(this.isTiedToCardHeld){
-                return `${this.top + this.index * 25}px`
+                let diff = (this.index + 1) - (this.cardHeld.index + 1) 
+                return `${(this.top + (diff * 25)) + 10}px`
             }else if(this.location == 'tableau') {
                 if(this.card.shown) {
                     return `${this.index * 25 - (this.shownInPile * 10)}px`
