@@ -3,10 +3,11 @@
         :style="{
             'color': card.shown ? card.color : 'black',
             'position': position,
-            'z-index': zIndex,
             'left': cLeft,
+            'z-index' : zIndex,
             'top': cTop
         }"
+        style="overflow:hidden"
         @mousedown.stop="detach"
         @mouseup="attach"
         @mouseenter="hoverCard(false)"

@@ -30,12 +30,25 @@
           <div 
             v-for="(pane, index) in foundation"
             :key="`fp${index}`"
-            class="empty-pane" style="position:relative">
+            class="empty-pane" 
+            style="position:relative"
+            @mousedown="moveCardTo"
+            @mouseleave="cardHovered(null)"
+            @mouseenter="cardHovered({
+              cardPosition: index,
+              location: 'foundation',
+              index: 0,
+              card: {
+                number: 0,
+                color: 'any',
+                suite: 'any'
+              } 
+            })">
               <card
                 :card="card"
                 :pile="pane"
-                :index="index"
-                :cardPosition="key"
+                :index="key"
+                :cardPosition="index"
                 location="foundation" 
                 v-for="(card,key) in pane"
                 :key="`fn${index}-${key}`"
@@ -124,9 +137,7 @@ export default {
     draw() {
       if(this.deck.length){
         this.drawn.push(...this.deck.splice(0,3))
-        this.drawn[this.drawn.length - 3].shown = true
-        this.drawn[this.drawn.length - 2].shown = true
-        this.drawn[this.drawn.length - 1].shown = true
+        this.drawn.forEach(card => card.shown = true)
       }else {
         this.deck = [...this.drawn.map(card => {
           card.shown = false
@@ -142,35 +153,48 @@ export default {
 
     //Fired on click on a card - tries to move the held card to this.cardHovered.
     moveCardTo() {
-      console.log('firing movecardTo')
       if(!!this.cardHeld) {
-        let transfer = []
-        let source
+        let transfer = [], source, destinationLocation, destination, destinationCard
+
+        //Establish which stack the card is coming from
         if(this.cardHeld.location == 'drawn'){
           source = this.drawn
         }else{
           source = this[this.cardHeld.location][this.cardHeld.cardPosition]
         }
-        let destination = this[this.cardHovering.location][this.cardHovering.cardPosition]
-        let destinationCard = this.cardHovering.card
-        if(this.cardHovering.location == 'foundation' && this.cardHeld.card.number == destinationCard.number + 1 && destinationCard.suite == this.cardHeld.card.suite && (this.cardHeld.index == source.length - 1 || this.cardHeld.card.location == 'drawn')) {
-          console.log('Found a match')
-          transfer = source.splice(this.cardHeld.index, source.length)
-          transfer.forEach(card => destination.push(card))
-          this.$emit('update:score', this.score + 10)
-          if(source.length) {
-            source[source.length - 1].shown = true
-            this.$emit('update:score', this.score + 5)
+
+        //Set up a pointer to the stack the card is going to, and the top card of that stack.
+        destinationLocation = this.cardHovering.location
+        destination = this[destinationLocation][this.cardHovering.cardPosition]
+        destinationCard = this.cardHovering.card
+
+        //If the destination is a foundation stack
+        if(destinationLocation == 'foundation') {
+
+          if(this.cardHeld.card.number == destinationCard.number + 1 && (destinationCard.suite == this.cardHeld.card.suite || destinationCard.suite == 'any') && (this.cardHeld.index == source.length - 1 || this.cardHeld.card.location == 'drawn')) {
+            transfer = source.splice(this.cardHeld.index, source.length)
+            transfer.forEach(card => destination.push(card))
+            this.$emit('update:score', this.score + 10)
+            if(source.length) {
+              source[source.length - 1].shown = true
+              this.$emit('update:score', this.score + 5)
+            }
           }
-        }else if((!destinationCard && this.cardHeld.card.number == 13) || (destinationCard.color != this.cardHeld.card.color && (destinationCard.number == (this.cardHeld.card.number + 1)))) {
-          transfer = source.splice(this.cardHeld.index, source.length)
-          transfer.forEach(card => destination.push(card))
-          if(this.cardHeld.location == 'foundation'){
-            this.$emit('update:score', this.score - 15)
-          }
-          else if(source.length) {
-            source[source.length - 1].shown = true
-            this.$emit('update:score', this.score + 5)
+        }
+
+        //If the destination is a tableau stack
+        else {
+
+          if((!destinationCard && this.cardHeld.card.number == 13) || (destinationCard.color != this.cardHeld.card.color && (destinationCard.number == (this.cardHeld.card.number + 1)))) {
+            transfer = source.splice(this.cardHeld.index, source.length)
+            transfer.forEach(card => destination.push(card))
+            if(this.cardHeld.location == 'foundation'){
+              this.$emit('update:score', this.score - 15)
+            }
+            else if(source.length) {
+              source[source.length - 1].shown = true
+              this.$emit('update:score', this.score + 5)
+            }
           }
         }
       }
