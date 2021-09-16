@@ -2,7 +2,7 @@
   "name": "sltr",
   "version": "0.0.1",
   "description": "A Quasar Framework app",
-  "productName": "Quasar App",
+  "productName": "Solitaire",
   "author": "Dylan Moylan <dmoylan@webmd.net>",
   "private": true,
   "scripts": {

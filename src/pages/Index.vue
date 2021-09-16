@@ -255,9 +255,27 @@ export default {
     watchPosition(e) {
       this.left = e.clientX
       this.top = e.clientY
+    },
+
+    doReset() {
+      this.deck = []
+      this.tableau = []
+      this.drawn = []
+      this.foundation = [
+        [],
+        [],
+        [],
+        []
+      ]
+      this.createDeck()
+      this.createTableau()
     }
   },
   computed: {
+
+    victory() {
+      return this.foundation.every(stack => stack.length == 13)
+    },
 
     //Returns an array representing what card each tableau slot requires on the top of its stack.
     tableauRequirements() {
@@ -304,17 +322,16 @@ export default {
   },
   watch: {
     reset(val) {
-      this.deck = []
-      this.tableau = []
-      this.drawn = []
-      this.foundation = [
-        [],
-        [],
-        [],
-        []
-      ]
-      this.createDeck()
-      this.createTableau()
+      this.doReset()
+    },
+    victory(val) {
+      if(val) {
+        this.$q.dialog({
+          title: 'Victory!',
+          message: `You win! Score: ${this.score}. Start new game?`,
+          cancel: true
+        }).onOk(res => this.doReset())
+      }
     }
   },
   mounted() {
@@ -332,8 +349,8 @@ export default {
 
 <style>
  .empty-pane {
-   width: 9em;
-   height: 14em;
+   width: 7.9em;
+   height: 11em;
    border: 1px solid white;
    border-radius: 3px;
    margin-right: 15px;
@@ -342,7 +359,7 @@ export default {
  .sltr-card {
    line-height: .93;
    cursor: pointer;
-   font-size: 15em;
+   font-size: 12em;
    background-color: white;
  }
 </style>
