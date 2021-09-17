@@ -112,7 +112,9 @@ export default {
                 return `${this.left + 10}px`
             }else if(this.isTiedToCardHeld){
                 return `${this.left + 10}px`
-            }else if(this.location == 'drawn') {
+            }else if(this.location == 'drawn' && this.card.shown) {
+                // let offset = ((this.index % 3) + 1) * 25  
+                // return `${offset}px`
                 return `${this.index * 25}px`
             }else{
                 return 0

@@ -136,8 +136,11 @@ export default {
     },
     draw() {
       if(this.deck.length){
-        this.drawn.push(...this.deck.splice(0,3))
-        this.drawn.forEach(card => card.shown = true)
+        // this.drawn.forEach(card => card.shown = false)
+        this.drawn.push(...this.deck.splice(0,3).map(card => {
+          card.shown = true
+          return card
+        }))
       }else {
         this.deck = [...this.drawn.map(card => {
           card.shown = false
@@ -269,6 +272,7 @@ export default {
       ]
       this.createDeck()
       this.createTableau()
+      this.$emit('update:score', 0)
     }
   },
   computed: {
